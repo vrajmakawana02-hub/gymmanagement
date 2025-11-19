@@ -10,7 +10,7 @@ const PORT = process.env.PORT;
 app.use(cors({
    origin: [
         "http://localhost:3000",
-        "https://gymmanagement-nu.vercel.app/",  // replace with real Vercel URL
+        "https://gymmanagement-nu.vercel.app",  // replace with real Vercel URL
     ],
     methods: "GET,POST,PUT,DELETE",
 }))
