@@ -67,7 +67,7 @@ const Singup = () => {
         }
 
         try {
-            const response = await axios.post("http://https://gymmanagement-wc7j.onrender.com/auth/register", inputField);
+            const response = await axios.post("https://gymmanagement-wc7j.onrender.com/auth/register", inputField);
             const successMsg = response.data.message;
             toast.success(successMsg);
 
