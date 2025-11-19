@@ -8,8 +8,11 @@ require('dotenv').config()
 const PORT = process.env.PORT;
 
 app.use(cors({
-    origin:'http://localhost:3000', // Your React app's URL
-    credentials: true
+   origin: [
+        "http://localhost:3000",
+        "https://your-frontend.vercel.app",  // replace with real Vercel URL
+    ],
+    methods: "GET,POST,PUT,DELETE",
 }))
 
 
