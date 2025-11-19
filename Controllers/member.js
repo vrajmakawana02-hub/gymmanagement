@@ -4,6 +4,11 @@ const Membership = require('../Modals/membership')
 exports.getAllMember = async (req, res) => {
     try {
         const { skip, limit } = req.query;
+            const today = new Date();
+        await Member.updateMany(
+            { gym: req.gym._id, nextBillDate: { $lt: today }, status: "Active" },
+            { $set: { status: "Expired" } }
+        )
         const members = await Member.find({ gym: req.gym._id });
         const totalMember = members.length;
 
@@ -65,7 +70,7 @@ exports.registerMember = async (req, res) => {
         if (memberShip) {
             let jngDate = new Date(joiningDate);
             const nextBillDate = addMonthsToDate(membershipMonth, jngDate);
-            let newmember = new Member({ name, mobileNo, address, membership, gym: req.gym._id, profilePic, nextBillDate });
+            let newmember = new Member({ name, mobileNo, address, membership, gym: req.gym._id, profilePic, joiningDate: jngDate,  nextBillDate });
             await newmember.save();
             res.status(200).json({ message: "Member Registered Successfully", newmember });
         } else {
@@ -191,8 +196,12 @@ exports.expiringWithIn4To7Days = async (req, res) => {
 exports.expiredMember = async (req, res) => {
     try {
         const today = new Date();
+         await Member.updateMany(
+      { gym: req.gym._id, nextBillDate: { $lt: today }, status: "Active" },
+      { $set: { status: "Expired" } }
+    );
         const member = await Member.find({
-            gym: req.gym._id, status: "Active",
+            gym: req.gym._id, status: "Expired",
             nextBillDate: {
                 $lt: today
             }
@@ -211,7 +220,7 @@ exports.expiredMember = async (req, res) => {
 
 exports.inActiveMember = async (req, res) => {
     try {
-        const member = await Member.find({ gym: req.gym._id, status: "Pending" });
+        const member = await Member.find({ gym: req.gym._id, status: "Expired" });
         res.status(200).json({
             message: member.length ? "Fetched Members SuccessFully" : "No Such Member is Pending",
             members: member,
@@ -232,6 +241,11 @@ exports.getMemberDetails = async (req, res) => {
                 error: "No Such Member"
             })
         }
+         const today = new Date();
+        if (new Date(member.nextBillDate) < today && member.status === "Active") {
+            member.status = "Expired";
+            await member.save();
+        }
         res.status(200).json({
             message: "Member Data fetched",
             member: member
@@ -245,14 +259,17 @@ exports.getMemberDetails = async (req, res) => {
 exports.changeStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        let { status } = req.body;
+        
         const member = await Member.findOne({ _id: id, gym: req.gym._id });
         if (!member) {
             return res.status(400).json({
                 error: "No Such Member"
             })
         }
-        member.status = status;
+
+        
+        member.status = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
         await member.save();
         res.status(200).json({
             message: "Status Changed Successfully"
@@ -280,6 +297,8 @@ exports.updateMemberPlan = async (req, res) => {
             }
             member.nextBillDate = nextBillDate;
             member.lastPayment = today;
+
+              member.status = "Active";
 
             await member.save();
             res.status(200).json({message:"Member Renewed SuccessFully",member});
